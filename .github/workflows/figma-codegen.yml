@@ -1,0 +1,67 @@
+name: Figma UI Code Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      figma_frame_url:
+        description: "https://www.figma.com/design/RzEe67QIojko9x1AySUgKk/MUI-based-design-system?node-id=196-1142&m=dev"
+        required: true
+      mcp_proxy_url:
+        description: "https://keyword-content-onto-stories.trycloudflare.com"
+        required: true
+
+jobs:
+  codegen:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Copilot Agent CLI
+        run: npm install -g @githubnext/copilot-agent
+
+      - name: Register MCP Endpoint
+        run: |
+          copilot-agent mcp add \
+            --url "${{ github.event.inputs.mcp_proxy_url }}" \
+            --format figma
+
+      - name: Generate Code from Figma Frame
+        run: |
+          mkdir -p generated
+          copilot-agent prompt \
+            --instruction "Generate a React component using Tailwind from this Figma frame." \
+            --frame "${{ github.event.inputs.figma_frame_url }}" \
+            --output "./generated/FigmaComponent.tsx"
+
+      - name: Create new branch
+        run: |
+          git checkout -b figma-gen-${{ github.run_id }}
+
+      - name: Commit generated code
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add generated/
+          git commit -m "Generated component from Figma frame"
+
+      - name: Push branch
+        run: |
+          git push origin figma-gen-${{ github.run_id }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: figma-gen-${{ github.run_id }}
+          base: development
+          title: "🔧 Generated UI from Figma"
+          body: |
+            This PR contains a React component generated from:
+            - Figma Frame: ${{ github.event.inputs.figma_frame_url }}
+            - MCP Endpoint: ${{ github.event.inputs.mcp_proxy_url }}
