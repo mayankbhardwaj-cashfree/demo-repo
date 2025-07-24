@@ -1,42 +1,43 @@
-name: Figma UI Code Generator
+name: Figma Codegen Pipeline
 
 on:
   workflow_dispatch:
     inputs:
       figma_frame_url:
-        description: "https://www.figma.com/design/RzEe67QIojko9x1AySUgKk/MUI-based-design-system?node-id=196-1142&m=dev"
+        description: "Figma frame URL (from Dev Mode in Figma Desktop)"
         required: true
       mcp_proxy_url:
-        description: "https://keyword-content-onto-stories.trycloudflare.com"
+        description: "Public MCP SSE endpoint (from mcp-remote or cloudflared)"
         required: true
 
 jobs:
-  codegen:
+  generate-ui:
+    name: Generate UI Code from Figma
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Copilot Agent CLI
+      - name: Install GitHub Copilot Agent CLI
         run: npm install -g @githubnext/copilot-agent
 
-      - name: Register MCP Endpoint
+      - name: Register MCP proxy target
         run: |
           copilot-agent mcp add \
             --url "${{ github.event.inputs.mcp_proxy_url }}" \
             --format figma
 
-      - name: Generate Code from Figma Frame
+      - name: Generate code from Figma frame
         run: |
           mkdir -p generated
           copilot-agent prompt \
-            --instruction "Generate a React component using Tailwind from this Figma frame." \
+            --instruction "Generate a React component using Tailwind CSS based on this Figma frame." \
             --frame "${{ github.event.inputs.figma_frame_url }}" \
             --output "./generated/FigmaComponent.tsx"
 
@@ -44,24 +45,26 @@ jobs:
         run: |
           git checkout -b figma-gen-${{ github.run_id }}
 
-      - name: Commit generated code
+      - name: Commit generated component
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git add generated/
-          git commit -m "Generated component from Figma frame"
+          git commit -m "Auto-generated component from Figma"
 
       - name: Push branch
-        run: |
-          git push origin figma-gen-${{ github.run_id }}
+        run: git push origin figma-gen-${{ github.run_id }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           branch: figma-gen-${{ github.run_id }}
           base: development
-          title: "🔧 Generated UI from Figma"
+          title: "Auto-generated UI from Figma"
           body: |
-            This PR contains a React component generated from:
-            - Figma Frame: ${{ github.event.inputs.figma_frame_url }}
-            - MCP Endpoint: ${{ github.event.inputs.mcp_proxy_url }}
+            This PR contains a React component auto-generated from the following Figma frame:
+
+            - Figma Frame URL: ${{ github.event.inputs.figma_frame_url }}
+            - MCP Proxy URL: ${{ github.event.inputs.mcp_proxy_url }}
+
+            Generated using GitHub Copilot Agent.
