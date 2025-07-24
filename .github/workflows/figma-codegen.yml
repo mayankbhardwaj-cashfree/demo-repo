@@ -27,12 +27,6 @@ jobs:
       - name: Install GitHub Copilot Agent CLI
         run: npm install -g @githubnext/github-copilot-cli
 
-      - name: Register MCP proxy target
-        run: |
-          copilot-agent mcp add \
-            --url "${{ github.event.inputs.mcp_proxy_url }}" \
-            --format figma
-
       - name: Generate code from Figma frame
         run: |
           mkdir -p generated
