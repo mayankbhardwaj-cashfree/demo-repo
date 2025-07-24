@@ -24,9 +24,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Copilot Agent from GitHub
-        run: npm install -g git+https://github.com/githubnext/copilot-agent.git
-
+      - name: Install GitHub Copilot Agent CLI
+        run: npm install -g @githubnext/github-copilot-cli
 
       - name: Register MCP proxy target
         run: |
