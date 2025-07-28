@@ -1,5 +1,5 @@
 import '@/app/ui/global.css';
-import { inter } from '@/app/ui/fonts';
+import { inter, dmSans } from '@/app/ui/fonts';
 import EmotionProvider from './emotion-provider';
 import MuiThemeProvider from './mui-theme-provider';
 
@@ -10,7 +10,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} ${dmSans.variable} antialiased`}>
         <EmotionProvider>
           <MuiThemeProvider>{children}</MuiThemeProvider>
         </EmotionProvider>
