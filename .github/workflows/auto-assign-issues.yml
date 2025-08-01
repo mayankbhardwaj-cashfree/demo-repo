@@ -21,34 +21,50 @@ jobs:
             const issue_number = context.payload.issue.number;
             
             try {
-              // Assign the issue to copilot
+              // First, let's try to get user info to verify the user exists
+              const assigneeUsername = 'mayankbhardwaj-cashfree'; // Replace with actual GitHub username
+              
+              console.log(`🔍 Attempting to assign issue #${issue_number} to ${assigneeUsername}`);
+              
+              // Assign the issue
               await github.rest.issues.addAssignees({
                 owner,
                 repo,
                 issue_number,
-                assignees: ['Copilot']
+                assignees: [assigneeUsername]
               });
               
-              console.log(`✅ Successfully assigned issue #${issue_number} to Copilot`);
+              console.log(`✅ Successfully assigned issue #${issue_number} to ${assigneeUsername}`);
               
               // Add a comment to confirm auto-assignment
               await github.rest.issues.createComment({
                 owner,
                 repo,
                 issue_number,
-                body: '🤖 This issue has been automatically assigned to @copilot for review.'
+                body: `🤖 This issue has been automatically assigned to @${assigneeUsername} for review.`
               });
               
             } catch (error) {
               console.error('❌ Error assigning issue:', error.message);
+              console.error('❌ Error details:', JSON.stringify(error, null, 2));
               
-              // If assignment fails, add a comment explaining the issue
+              // Add detailed error comment
+              let errorMessage = '⚠️ Auto-assignment failed. ';
+              
               if (error.status === 422) {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number,
-                  body: '⚠️ Auto-assignment to @copilot failed. Please check if the user has access to this repository.'
-                });
+                errorMessage += 'The user might not exist or does not have access to this repository.';
+              } else if (error.status === 404) {
+                errorMessage += 'Repository or user not found.';
+              } else if (error.status === 403) {
+                errorMessage += 'Permission denied. Check if the PAT token has the required permissions.';
+              } else {
+                errorMessage += `Error: ${error.message}`;
               }
+              
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: errorMessage + '\n\nPlease check:\n1. The username exists on GitHub\n2. The user has access to this repository\n3. The PAT token has correct permissions'
+              });
             }
