@@ -1,4 +1,4 @@
-name: Auto Assign Issues to Copilot
+name: Auto-assign Issues to Copilot
 
 on:
   issues:
@@ -7,64 +7,14 @@ on:
 jobs:
   assign-issue:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      contents: read
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Assign issue to copilot
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.PAT_GITHUB }}
-          script: |
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.issue.number;
-            
-            try {
-              // First, let's try to get user info to verify the user exists
-              const assigneeUsername = '@copilot'; // Replace with actual GitHub username
-              
-              console.log(`🔍 Attempting to assign issue #${issue_number} to ${assigneeUsername}`);
-              
-              // Assign the issue
-              await github.rest.issues.addAssignees({
-                owner,
-                repo,
-                issue_number,
-                assignees: [assigneeUsername]
-              });
-              
-              console.log(`✅ Successfully assigned issue #${issue_number} to ${assigneeUsername}`);
-              
-              // Add a comment to confirm auto-assignment
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number,
-                body: `🤖 This issue has been automatically assigned to @${assigneeUsername} for review.`
-              });
-              
-            } catch (error) {
-              console.error('❌ Error assigning issue:', error.message);
-              console.error('❌ Error details:', JSON.stringify(error, null, 2));
-              
-              // Add detailed error comment
-              let errorMessage = '⚠️ Auto-assignment failed. ';
-              
-              if (error.status === 422) {
-                errorMessage += 'The user might not exist or does not have access to this repository.';
-              } else if (error.status === 404) {
-                errorMessage += 'Repository or user not found.';
-              } else if (error.status === 403) {
-                errorMessage += 'Permission denied. Check if the PAT token has the required permissions.';
-              } else {
-                errorMessage += `Error: ${error.message}`;
-              }
-              
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number,
-                body: errorMessage + '\n\nPlease check:\n1. The username exists on GitHub\n2. The user has access to this repository\n3. The PAT token has correct permissions'
-              });
-            }
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --add-assignee "@copilot"
+
+        env:
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
