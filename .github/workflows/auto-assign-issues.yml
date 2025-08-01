@@ -26,10 +26,10 @@ jobs:
                 owner,
                 repo,
                 issue_number,
-                assignees: ['copilot']
+                assignees: ['Copilot']
               });
               
-              console.log(`✅ Successfully assigned issue #${issue_number} to copilot`);
+              console.log(`✅ Successfully assigned issue #${issue_number} to Copilot`);
               
               // Add a comment to confirm auto-assignment
               await github.rest.issues.createComment({
