@@ -22,7 +22,7 @@ jobs:
             
             try {
               // First, let's try to get user info to verify the user exists
-              const assigneeUsername = 'copilot-swe-agent'; // Replace with actual GitHub username
+              const assigneeUsername = '@copilot'; // Replace with actual GitHub username
               
               console.log(`🔍 Attempting to assign issue #${issue_number} to ${assigneeUsername}`);
               
