@@ -1,7 +1,7 @@
-import { Inter, Lusitana } from 'next/font/google';
- 
-export const inter = Inter({ subsets: ['latin'] });
-export const lusitana = Lusitana({
-  weight: ['400', '700'],
-  subsets: ['latin'],
-});
+// Using system fonts as fallback due to network restrictions
+export const inter = {
+  className: 'font-sans'
+};
+export const lusitana = {
+  className: 'font-serif'
+};
